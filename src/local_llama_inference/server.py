@@ -90,7 +90,7 @@ class LlamaServer:
             return result.stdout.strip()
 
         # Check HF-downloaded bundle (installed by installer.py)
-        extracted_bin = Path.home() / ".local" / "share" / "local-llama-inference" / "extracted" / "llama-dist" / "bin" / "llama-server"
+        extracted_bin = Path.home() / ".local" / "share" / "local-llama-inference" / "extracted" / "bin" / "llama-server"
         if extracted_bin.exists():
             return str(extracted_bin)
 
