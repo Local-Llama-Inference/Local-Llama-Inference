@@ -64,21 +64,67 @@ class LlamaServer:
         self._process: Optional[subprocess.Popen] = None
         self._binary = binary_path or self._find_binary()
 
+    def _build_library_paths(self) -> str:
+        """
+        Build LD_LIBRARY_PATH for subprocess.
+
+        Collects library paths from:
+        1. HF-downloaded bundle (llama-dist/lib and nccl-dist/lib)
+        2. Existing LD_LIBRARY_PATH environment variable
+
+        Returns:
+            Colon-separated library paths string
+        """
+        from ._bootstrap.installer import BinaryInstaller
+
+        lib_paths = []
+
+        try:
+            installer = BinaryInstaller()
+            paths = installer.get_binary_paths()
+
+            if paths.get("llama_lib"):
+                lib_paths.append(str(paths["llama_lib"]))
+
+            if paths.get("nccl_lib"):
+                lib_paths.append(str(paths["nccl_lib"]))
+        except Exception:
+            pass
+
+        # Preserve existing LD_LIBRARY_PATH
+        existing_ld = os.getenv("LD_LIBRARY_PATH", "").strip()
+        if existing_ld:
+            lib_paths.append(existing_ld)
+
+        return ":".join(lib_paths) if lib_paths else ""
+
     def _find_binary(self) -> str:
         """
         Find llama-server binary.
 
         Searches in:
         1. LLAMA_BIN_DIR environment variable
-        2. System PATH
-        3. HF-downloaded bundle (~/.local/share/local-llama-inference/extracted/)
-        4. Local llama.cpp build directory
+        2. HF-downloaded bundle via BinaryInstaller (unified path resolution)
+        3. System PATH
         """
+        from ._bootstrap.installer import BinaryInstaller
+
         # Check environment variable
         if env_dir := os.getenv("LLAMA_BIN_DIR"):
             binary_path = Path(env_dir) / "llama-server"
             if binary_path.exists():
                 return str(binary_path)
+
+        # Check HF-downloaded bundle (via BinaryInstaller for unified path resolution)
+        try:
+            installer = BinaryInstaller()
+            paths = installer.get_binary_paths()
+            if paths.get("llama_bin"):
+                binary_path = paths["llama_bin"] / "llama-server"
+                if binary_path.exists():
+                    return str(binary_path)
+        except Exception:
+            pass
 
         # Check PATH
         result = subprocess.run(
@@ -88,18 +134,6 @@ class LlamaServer:
         )
         if result.returncode == 0:
             return result.stdout.strip()
-
-        # Check HF-downloaded bundle (installed by installer.py)
-        extracted_bin = Path.home() / ".local" / "share" / "local-llama-inference" / "extracted" / "bin" / "llama-server"
-        if extracted_bin.exists():
-            return str(extracted_bin)
-
-        # Check local llama.cpp build
-        local_build = Path(
-            "/media/waqasm86/External1/Project-Nvidia-Office/Project-LlamaInference/llama.cpp/build/bin/llama-server"
-        )
-        if local_build.exists():
-            return str(local_build)
 
         raise BinaryNotFound("llama-server binary not found")
 
@@ -124,12 +158,20 @@ class LlamaServer:
         args = self.config.to_args()
         cmd = [self._binary] + args
 
+        # Build environment with LD_LIBRARY_PATH set for binary dependencies
+        env = os.environ.copy()
+        lib_paths = self._build_library_paths()
+        if lib_paths:
+            env["LD_LIBRARY_PATH"] = lib_paths
+            logger.debug(f"LD_LIBRARY_PATH: {lib_paths}")
+
         try:
             self._process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE if not self.config.verbose else None,
                 stderr=subprocess.PIPE if not self.config.verbose else None,
                 text=True,
+                env=env,
             )
         except FileNotFoundError as e:
             raise BinaryNotFound(f"Failed to start llama-server: {e}") from e

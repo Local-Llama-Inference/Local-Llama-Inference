@@ -43,7 +43,6 @@ setup(
     python_requires=">=3.8",
     install_requires=[
         "httpx>=0.24.0",           # Async HTTP client for REST API
-        "pydantic>=2.0",           # Data validation
         "huggingface-hub>=0.16.0", # For downloading binaries from HF
     ],
     extras_require={

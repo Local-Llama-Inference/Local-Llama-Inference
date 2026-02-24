@@ -14,9 +14,8 @@ def find_binary(name: str) -> str:
 
     Searches in:
     1. LLAMA_BIN_DIR environment variable
-    2. System PATH
-    3. Extracted bundle directory
-    4. llama.cpp local build directory
+    2. HF-downloaded bundle (BinaryInstaller)
+    3. System PATH
 
     Args:
         name: Binary name (e.g., 'llama-server')
@@ -33,12 +32,17 @@ def find_binary(name: str) -> str:
         if path.exists() and path.is_file():
             return str(path.absolute())
 
-    # Check extracted bundle
-    bundle_dir = Path.home() / ".local" / "share" / "local-llama-inference" / "bin"
-    if bundle_dir.exists():
-        path = bundle_dir / name
-        if path.exists():
-            return str(path.absolute())
+    # Check HF-downloaded bundle via BinaryInstaller
+    try:
+        from .installer import BinaryInstaller
+        installer = BinaryInstaller()
+        paths = installer.get_binary_paths()
+        if paths.get("llama_bin"):
+            path = paths["llama_bin"] / name
+            if path.exists():
+                return str(path.absolute())
+    except Exception:
+        pass
 
     # Check system PATH
     result = subprocess.run(
@@ -49,18 +53,6 @@ def find_binary(name: str) -> str:
     if result.returncode == 0:
         return result.stdout.strip()
 
-    # Check llama.cpp local build
-    local_build = (
-        Path("/media/waqasm86/External1/Project-Nvidia-Office")
-        / "Project-LlamaInference"
-        / "llama.cpp"
-        / "build"
-        / "bin"
-        / name
-    )
-    if local_build.exists():
-        return str(local_build.absolute())
-
     raise BinaryNotFound(f"Binary '{name}' not found in PATH or bundle")
 
 
@@ -69,10 +61,9 @@ def find_library(name: str) -> str:
     Find a shared library (.so file).
 
     Searches in:
-    1. LLAMA_LIB_DIR or extracted bundle
+    1. HF-downloaded bundle (BinaryInstaller)
     2. System library paths
     3. ~/.local/lib (NCCL installation)
-    4. llama.cpp local build
 
     Args:
         name: Library name (e.g., 'libllama.so' or 'libnccl.so.2')
@@ -85,13 +76,23 @@ def find_library(name: str) -> str:
     """
     candidates = []
 
-    # Check extracted bundle
-    bundle_lib = Path.home() / ".local" / "share" / "local-llama-inference" / "lib"
-    if bundle_lib.exists():
-        candidates.append(bundle_lib / name)
-        # Check for version variants (e.g., libllama.so.0)
-        for f in bundle_lib.glob(f"{name}*"):
-            candidates.append(f)
+    # Check HF-downloaded bundle via BinaryInstaller
+    try:
+        from .installer import BinaryInstaller
+        installer = BinaryInstaller()
+        paths = installer.get_binary_paths()
+
+        if paths.get("llama_lib"):
+            candidates.append(paths["llama_lib"] / name)
+            for f in paths["llama_lib"].glob(f"{name}*"):
+                candidates.append(f)
+
+        if paths.get("nccl_lib"):
+            candidates.append(paths["nccl_lib"] / name)
+            for f in paths["nccl_lib"].glob(f"{name}*"):
+                candidates.append(f)
+    except Exception:
+        pass
 
     # Check ~/.local/lib (NCCL)
     local_lib = Path.home() / ".local" / "lib"
@@ -106,19 +107,6 @@ def find_library(name: str) -> str:
             candidates.append(path / name)
             for f in path.glob(f"{name}*"):
                 candidates.append(f)
-
-    # Check llama.cpp local build
-    local_lib_dir = (
-        Path("/media/waqasm86/External1/Project-Nvidia-Office")
-        / "Project-LlamaInference"
-        / "llama.cpp"
-        / "build"
-        / "lib"
-    )
-    if local_lib_dir.exists():
-        candidates.append(local_lib_dir / name)
-        for f in local_lib_dir.glob(f"{name}*"):
-            candidates.append(f)
 
     # Find first existing
     for path in candidates:

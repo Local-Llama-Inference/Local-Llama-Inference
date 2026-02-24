@@ -56,15 +56,29 @@ __all__ = [
     "ensure_binaries_installed",
 ]
 
-# Auto-download binaries on first import (like llcuda does)
-try:
-    ensure_binaries_installed()
-except Exception as e:
-    # Don't fail import if binary download fails - user can still call it manually
+# Auto-download binaries on first import (can be disabled with env var)
+# Set LOCAL_LLAMA_INFERENCE_NO_AUTO_INSTALL=1 to skip auto-download
+# (useful for offline systems, CI, or air-gapped deployments)
+import os
+
+if not os.getenv("LOCAL_LLAMA_INFERENCE_NO_AUTO_INSTALL"):
+    try:
+        ensure_binaries_installed()
+    except Exception as e:
+        # Don't fail import if binary download fails - user can still call it manually
+        import warnings
+        warnings.warn(
+            f"Could not automatically download binaries on import: {str(e)}\n"
+            f"You can manually download by running: llama-inference install\n"
+            f"Or set LOCAL_LLAMA_INFERENCE_NO_AUTO_INSTALL=1 to skip auto-download",
+            RuntimeWarning,
+            stacklevel=2
+        )
+else:
+    # Auto-install is disabled
     import warnings
     warnings.warn(
-        f"Could not automatically download binaries on import: {str(e)}\n"
-        f"You can manually download by running: llama-inference install",
+        "LOCAL_LLAMA_INFERENCE_NO_AUTO_INSTALL is set - binary auto-download is disabled",
         RuntimeWarning,
         stacklevel=2
     )

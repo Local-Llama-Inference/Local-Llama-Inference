@@ -131,7 +131,7 @@ class BinaryInstaller:
             extract_dir.mkdir(parents=True, exist_ok=True)
 
             with tarfile.open(bundle_path, "r:gz") as tar:
-                tar.extractall(path=extract_dir)
+                self._safe_extractall(tar, extract_dir)
 
             print(f"✅ Extracted to: {extract_dir}")
 
@@ -156,6 +156,34 @@ class BinaryInstaller:
 
         calculated = sha256_hash.hexdigest()
         return calculated.lower() == expected_sha256.lower()
+
+    def _safe_extractall(self, tar: tarfile.TarFile, extract_dir: Path) -> None:
+        """
+        Safely extract tar archive, preventing path traversal attacks.
+
+        Validates that all tar members extract within the target directory.
+
+        Args:
+            tar: TarFile object
+            extract_dir: Target extraction directory
+
+        Raises:
+            ValueError: If any member would escape the target directory
+        """
+        for member in tar.getmembers():
+            member_path = extract_dir / member.name
+
+            # Resolve to absolute path and check if it's within extract_dir
+            try:
+                member_path.resolve().relative_to(extract_dir.resolve())
+            except ValueError:
+                raise ValueError(
+                    f"Tar member '{member.name}' would escape extract directory. "
+                    f"This may indicate a malicious or corrupted archive."
+                )
+
+        # If all members are safe, extract them
+        tar.extractall(path=extract_dir)
 
     def get_binary_paths(self) -> dict:
         """Get paths to installed binaries."""
