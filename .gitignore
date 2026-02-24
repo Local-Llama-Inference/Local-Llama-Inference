@@ -255,3 +255,13 @@ releases/
 *.tar
 *.zip
 binaries/
+
+# Local testing and reference notebooks
+# These are user-specific test files and reference materials
+notebooks-local/
+.ipynb_checkpoints/
+
+# Claude Code project directory (outside git repo)
+# .claude/ is stored outside the repository at:
+# /media/waqasm86/External1/Project-Nvidia-Office/Project-LlamaInference/.claude/
+# This is not in git but listed here for documentation
