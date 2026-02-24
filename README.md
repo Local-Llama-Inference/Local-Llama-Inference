@@ -76,6 +76,77 @@ nccl.all_gather(sendbuff, recvbuff, ncclFloat32, comm)
 
 ---
 
+## ⚡ TL;DR - Get Started in 30 Seconds
+
+```bash
+# Step 1: Install (takes 1 minute)
+pip install local-llama-inference
+
+# Step 2: Download binaries (takes 10-15 minutes, once only)
+# This happens automatically on first use:
+python -c "from local_llama_inference import LlamaServer; print('✅ Ready!')"
+
+# Step 3: Download a model and start using!
+wget https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/Mistral-7B-Instruct-v0.1.Q4_K_M.gguf
+
+# Step 4: Run inference
+python << 'EOF'
+from local_llama_inference import LlamaServer, LlamaClient
+
+server = LlamaServer(model_path="./Mistral-7B-Instruct-v0.1.Q4_K_M.gguf", n_gpu_layers=33)
+server.start()
+server.wait_ready()
+
+client = LlamaClient()
+response = client.chat_completion(
+    messages=[{"role": "user", "content": "What is machine learning?"}]
+)
+print(response.choices[0].message.content)
+server.stop()
+EOF
+```
+
+That's it! You now have a fully functional GPU-accelerated LLM inference system. ✨
+
+---
+
+## 🔄 How It Works: Automatic Binary Installation
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Step 1: User runs: pip install local-llama-inference        │
+│         ↓                                                    │
+│ Step 2: PyPI delivers small Python package (29 KB wheel)    │
+│         ↓                                                    │
+│ Step 3: User imports: from local_llama_inference import ... │
+│         ↓                                                    │
+│ Step 4: Package detects binaries are missing                │
+│         ↓                                                    │
+│ Step 5: Auto-downloads 834 MB from Hugging Face CDN         │
+│         (Fast: ~1-2 Mbps, takes ~10-15 minutes)             │
+│         ↓                                                    │
+│ Step 6: Extracts to ~/.local/share/local-llama-inference/   │
+│         ↓                                                    │
+│ Step 7: Ready to use! (cached for future runs)              │
+│         ↓                                                    │
+│ Result: ✅ Full SDK with CUDA binaries ready to go!         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Why This Approach?
+
+| Aspect | Benefit |
+|--------|---------|
+| **Installation** | Single command: `pip install local-llama-inference` |
+| **Package Size** | Tiny wheel (29 KB) vs. huge tarball (834 MB) |
+| **Dependencies** | Auto-installed with pip (httpx, pydantic, huggingface-hub) |
+| **Binary Delivery** | Hugging Face CDN (fast, reliable, scalable) |
+| **Storage** | Binaries cached in `~/.local/share/` (standard XDG location) |
+| **Updates** | Simple `pip install --upgrade` for new versions |
+| **Management** | CLI tools: `llama-inference install/verify/info` |
+
+---
+
 ## 📋 System Requirements
 
 ### Minimum
@@ -108,7 +179,34 @@ nccl.all_gather(sendbuff, recvbuff, ncclFloat32, comm)
 
 ### 1. Installation
 
-#### Option A: From Release Package (Recommended)
+#### ✨ Option A: From PyPI (Recommended - Simplest)
+```bash
+# Install from PyPI - auto-downloads CUDA binaries on first use
+pip install local-llama-inference
+
+# On first import, binaries automatically download from Hugging Face (~10-15 minutes)
+python -c "from local_llama_inference import LlamaServer; print('✅ Ready!')"
+```
+
+**What happens automatically:**
+- Detects if binaries are already installed
+- If missing: Downloads 834 MB CUDA + llama.cpp bundle from Hugging Face CDN
+- Extracts to: `~/.local/share/local-llama-inference/`
+- Caches for future runs (no re-download needed!)
+
+**Optional: Pre-download binaries (avoid waiting on first use)**
+```bash
+# Pre-download binaries without waiting
+llama-inference install
+
+# Verify installation
+llama-inference verify
+
+# Show package info
+llama-inference info
+```
+
+#### Option B: From Release Package
 ```bash
 # Download from GitHub Releases
 # https://github.com/Local-Llama-Inference/Local-Llama-Inference/releases/tag/v0.1.0
@@ -118,16 +216,36 @@ cd local-llama-inference-v0.1.0
 pip install -e ./python
 ```
 
-#### Option B: From Source (Developer)
+#### Option C: From Source (Developer)
 ```bash
 git clone https://github.com/Local-Llama-Inference/Local-Llama-Inference.git
 cd Local-Llama-Inference/local-llama-inference
 pip install -e .
+
+# Then download binaries
+llama-inference install
 ```
 
 ### 2. Verify Installation
+
+**After pip install:**
 ```bash
+# Quick check
 python -c "from local_llama_inference import LlamaServer, detect_gpus; print('✅ SDK Ready'); print(detect_gpus())"
+
+# More detailed verification
+llama-inference verify
+```
+
+**First-time setup (automatic):**
+```
+🚀 First-time setup: Installing local-llama-inference binaries...
+📥 Downloading local-llama-inference-complete-v0.1.0.tar.gz from Hugging Face...
+   This may take a few minutes...
+✅ Downloaded to: ~/.local/share/local-llama-inference/
+📦 Extracting binaries...
+✅ Extracted to: ~/.local/share/local-llama-inference/extracted
+✅ Binary installation complete!
 ```
 
 ### 3. Download a Model
@@ -172,6 +290,51 @@ print("Assistant:", response.choices[0].message.content)
 
 # Cleanup
 server.stop()
+```
+
+---
+
+## 🛠️ CLI Tools
+
+After installation, you get command-line tools to manage binaries:
+
+```bash
+# Install/download CUDA binaries from Hugging Face
+llama-inference install
+
+# Verify binaries are installed and accessible
+llama-inference verify
+
+# Show package version and links
+llama-inference info
+
+# Force reinstall (e.g., if corrupted)
+llama-inference install --force
+
+# Use custom cache directory
+llama-inference install --cache-dir ~/.cache/llama-inference
+
+# Show help
+llama-inference --help
+```
+
+**Example output:**
+```
+🔧 local-llama-inference 0.1.0
+   Installing/updating binaries...
+
+📥 Downloading local-llama-inference-complete-v0.1.0.tar.gz from Hugging Face...
+   This may take a few minutes...
+✅ Downloaded to: /home/user/.local/share/local-llama-inference/
+📦 Extracting binaries...
+✅ Extracted to: /home/user/.local/share/local-llama-inference/extracted
+✅ Binary installation complete!
+
+📁 Binary paths:
+   llama_bin: /home/user/.local/share/local-llama-inference/extracted/llama-dist/bin
+   llama_lib: /home/user/.local/share/local-llama-inference/extracted/llama-dist/lib
+   nccl_lib: /home/user/.local/share/local-llama-inference/extracted/nccl-dist/lib
+   nccl_include: /home/user/.local/share/local-llama-inference/extracted/nccl-dist/include
 ```
 
 ---
@@ -454,6 +617,63 @@ tensor_split = suggest_tensor_split(gpus)
 
 ## 🛠️ Troubleshooting
 
+### Installation & Auto-Download
+
+#### "pip install local-llama-inference" fails
+```bash
+# Make sure pip is up to date
+pip install --upgrade pip
+
+# Try again
+pip install local-llama-inference
+```
+
+#### Binaries fail to auto-download on first use
+```bash
+# Manually trigger download with CLI
+llama-inference install
+
+# Or check what's wrong
+llama-inference verify
+
+# Check your internet connection
+ping huggingface.co
+```
+
+#### "huggingface-hub not found"
+```bash
+# The dependency should auto-install, but if it doesn't:
+pip install huggingface-hub>=0.16.0
+
+# Then retry
+python -c "from local_llama_inference import LlamaServer"
+```
+
+#### Binaries partially downloaded (interrupted)
+```bash
+# Force re-download
+llama-inference install --force
+
+# Or clean up and restart
+rm -rf ~/.local/share/local-llama-inference/
+llama-inference install
+```
+
+#### Low disk space warning during download
+```bash
+# Binaries need ~1 GB temporary space for extraction
+# Check available space
+df -h
+
+# If needed, set custom cache directory
+LLAMA_INFERENCE_CACHE=/path/to/larger/disk python your_script.py
+
+# Or use CLI with custom cache
+llama-inference install --cache-dir /path/to/custom/location
+```
+
+### Runtime Issues
+
 ### "CUDA out of memory"
 ```python
 # Solution 1: Reduce GPU layers
@@ -550,17 +770,50 @@ local-llama-inference/
 
 ## 📦 Dependencies
 
-### Required
-- **httpx** >= 0.24.0 - Async HTTP client for REST API
-- **pydantic** >= 2.0 - Data validation and settings management
+### Python Packages (Auto-Installed via pip)
 
-### Optional (Development)
+| Package | Purpose | Version |
+|---------|---------|---------|
+| **httpx** | Async HTTP client for REST API calls to llama-server | >= 0.24.0 |
+| **pydantic** | Data validation and configuration management | >= 2.0 |
+| **huggingface-hub** | Auto-download of CUDA binaries from Hugging Face | >= 0.16.0 |
+
+### System Requirements
+
+- **NVIDIA CUDA Runtime** - Included in auto-downloaded binaries
+  - If pre-built: No CUDA installation needed
+  - If building from source: CUDA 11.5+ toolkit
+- **NVIDIA Drivers** - Required, any recent version (≥ 418)
+- **Python** - 3.8 through 3.12
+
+### Optional (Development Only)
 - **pytest** >= 7.0 - Unit testing
 - **pytest-asyncio** >= 0.21.0 - Async test support
+- **black** >= 23.0 - Code formatting
+- **mypy** >= 1.0 - Type checking
+- **ruff** >= 0.1.0 - Linting
 
-### System
-- **NVIDIA CUDA** - Any version 11.5+ (runtime included in package)
-- **NVIDIA Drivers** - Required, any recent version
+### Binary Components (Downloaded Automatically)
+
+When you first use the package, these are auto-downloaded from Hugging Face:
+
+| Component | Size | Source |
+|-----------|------|--------|
+| **llama.cpp** | ~40 MB | Compiled binaries + libraries |
+| **NCCL 2.29.3** | ~52 MB | NVIDIA Collective Communication |
+| **CUDA Runtime** | ~150 MB | NVIDIA CUDA 12.8 runtime libs |
+| **Documentation** | ~2 MB | README + guides |
+| **Total** | ~834 MB | Hosted on Hugging Face CDN |
+
+**Download Location:**
+```
+https://huggingface.co/datasets/waqasm86/Local-Llama-Inference/
+```
+
+**Cache Location (after download):**
+```
+~/.local/share/local-llama-inference/
+```
 
 ---
 
@@ -605,9 +858,11 @@ Contributions are welcome! Please:
 
 ## 📞 Support & Resources
 
+- **PyPI Package**: [Install with pip](https://pypi.org/project/local-llama-inference/)
 - **GitHub Issues**: [Report bugs or request features](https://github.com/Local-Llama-Inference/Local-Llama-Inference/issues)
 - **GitHub Discussions**: [Ask questions and share ideas](https://github.com/Local-Llama-Inference/Local-Llama-Inference/discussions)
 - **Releases**: [Download packages](https://github.com/Local-Llama-Inference/Local-Llama-Inference/releases)
+- **Hugging Face Binaries**: [Download CUDA bundles](https://huggingface.co/datasets/waqasm86/Local-Llama-Inference/)
 
 ### Related Projects
 - **llama.cpp** - Core inference engine: https://github.com/ggml-org/llama.cpp

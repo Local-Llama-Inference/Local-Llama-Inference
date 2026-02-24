@@ -200,8 +200,13 @@ cython_debug/
 # Ruff stuff:
 .ruff_cache/
 
-# PyPI configuration file
+# PyPI configuration file and credentials
 .pypirc
+.pypirc.bak
+
+# Pip install cache (local-llama-inference binaries)
+# Users' cached binaries are in ~/.local/share/local-llama-inference/
+# This is NOT checked into version control
 
 # Cursor
 #  Cursor is an AI-powered code editor. `.cursorignore` specifies files/directories to
