@@ -55,3 +55,16 @@ __all__ = [
     "BinaryInstaller",
     "ensure_binaries_installed",
 ]
+
+# Auto-download binaries on first import (like llcuda does)
+try:
+    ensure_binaries_installed()
+except Exception as e:
+    # Don't fail import if binary download fails - user can still call it manually
+    import warnings
+    warnings.warn(
+        f"Could not automatically download binaries on import: {str(e)}\n"
+        f"You can manually download by running: llama-inference install",
+        RuntimeWarning,
+        stacklevel=2
+    )

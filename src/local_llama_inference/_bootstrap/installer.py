@@ -80,7 +80,7 @@ class BinaryInstaller:
             return True
 
         bundle_info = self.get_platform_bundle()
-        if not bundle_info is None:
+        if bundle_info is None:
             print(f"⚠️  Binary bundle not available for your platform: "
                   f"{platform.system()} {platform.machine()}")
             return False
