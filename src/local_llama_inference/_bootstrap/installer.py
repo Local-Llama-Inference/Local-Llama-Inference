@@ -32,7 +32,7 @@ class BinaryInstaller:
     BUNDLES = {
         "linux": {
             "filename": "local-llama-inference-complete-v0.1.0.tar.gz",
-            "sha256": None,  # Will be fetched from .sha256 file
+            "sha256": "b9b1a813e44f38c249e4d312ee88be94849a907da4f22fe9995c3d29d845c0b9",
         }
     }
 
@@ -115,6 +115,15 @@ class BinaryInstaller:
             )
 
             print(f"✅ Downloaded to: {bundle_path}")
+
+            # Verify checksum
+            expected_sha256 = bundle_info.get("sha256")
+            if expected_sha256:
+                print(f"🔒 Verifying checksum...")
+                if not self.verify_checksum(Path(bundle_path), expected_sha256):
+                    raise ValueError(f"SHA256 checksum mismatch for {filename}")
+                print(f"✅ Checksum verified")
+
             print(f"📦 Extracting binaries...")
 
             # Extract the bundle

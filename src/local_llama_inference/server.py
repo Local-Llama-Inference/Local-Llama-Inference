@@ -71,7 +71,8 @@ class LlamaServer:
         Searches in:
         1. LLAMA_BIN_DIR environment variable
         2. System PATH
-        3. Local llama.cpp build directory
+        3. HF-downloaded bundle (~/.local/share/local-llama-inference/extracted/)
+        4. Local llama.cpp build directory
         """
         # Check environment variable
         if env_dir := os.getenv("LLAMA_BIN_DIR"):
@@ -87,6 +88,11 @@ class LlamaServer:
         )
         if result.returncode == 0:
             return result.stdout.strip()
+
+        # Check HF-downloaded bundle (installed by installer.py)
+        extracted_bin = Path.home() / ".local" / "share" / "local-llama-inference" / "extracted" / "llama-dist" / "bin" / "llama-server"
+        if extracted_bin.exists():
+            return str(extracted_bin)
 
         # Check local llama.cpp build
         local_build = Path(
