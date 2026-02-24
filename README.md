@@ -211,6 +211,34 @@ pip install -e .
 
 ---
 
+## 📚 Jupyter Notebooks (Interactive Examples)
+
+Learn by doing with comprehensive Jupyter notebooks covering all features:
+
+| Notebook | Description | Duration |
+|----------|-------------|----------|
+| [01_quick_start.ipynb](notebooks/01_quick_start.ipynb) | Auto-download binaries, GPU detection, basic chat | 20 min |
+| [02_streaming_responses.ipynb](notebooks/02_streaming_responses.ipynb) | Token-by-token streaming, latency measurement | 15 min |
+| [03_embeddings.ipynb](notebooks/03_embeddings.ipynb) | Text embeddings, semantic search, clustering | 15 min |
+| [04_multi_gpu.ipynb](notebooks/04_multi_gpu.ipynb) | Multi-GPU tensor parallelism, benchmarking | 20 min |
+| [05_advanced_api.ipynb](notebooks/05_advanced_api.ipynb) | Complete API reference (30+ endpoints) | 25 min |
+| [06_gpu_detection.ipynb](notebooks/06_gpu_detection.ipynb) | GPU analysis, VRAM planning, troubleshooting | 15 min |
+
+**Quick Start with Notebooks:**
+```bash
+# Install Jupyter
+pip install jupyter jupyterlab
+
+# Start JupyterLab
+jupyter lab notebooks/
+
+# Open and run notebooks in order (01 → 06)
+```
+
+👉 **[Notebooks README](notebooks/README.md)** - Complete guide with learning sequences and prerequisites
+
+---
+
 ## 🎯 Usage Examples
 
 ### Basic Chat
@@ -628,8 +656,10 @@ Contributions are welcome! Please:
 
 ---
 
-## 📞 Support
+## 📞 Support & Learning
 
+- **[📚 Jupyter Notebooks](notebooks/)** - Interactive examples and tutorials
+- **[Notebooks README](notebooks/README.md)** - Complete guide to all notebooks
 - **[GitHub Issues](https://github.com/Local-Llama-Inference/Local-Llama-Inference/issues)** - Report bugs
 - **[GitHub Discussions](https://github.com/Local-Llama-Inference/Local-Llama-Inference/discussions)** - Ask questions
 - **[Documentation](https://github.com/Local-Llama-Inference/Local-Llama-Inference)** - Read guides
