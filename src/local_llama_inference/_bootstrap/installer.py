@@ -70,6 +70,11 @@ class BinaryInstaller:
         """
         Download and extract binary bundle from Hugging Face.
 
+        Downloads the complete CUDA binaries bundle (~834MB) which includes:
+        - llama.cpp compiled for NVIDIA CUDA GPUs
+        - NVIDIA NCCL library for multi-GPU support
+        - All required shared libraries
+
         Args:
             force: Force download even if already installed
 
@@ -77,35 +82,53 @@ class BinaryInstaller:
             True if successful, False otherwise
         """
         if self.is_installed() and not force:
+            print("✅ CUDA binaries already installed")
             return True
 
         bundle_info = self.get_platform_bundle()
         if bundle_info is None:
-            print(f"⚠️  Binary bundle not available for your platform: "
+            print(f"❌ Binary bundle not available for your platform: "
                   f"{platform.system()} {platform.machine()}")
+            print(f"   Supported: Linux x86_64")
+            print(f"   Current: {platform.system()} {platform.machine()}")
             return False
 
         if hf_hub_download is None:
-            print("❌ huggingface-hub package required for binary download")
+            print("❌ FATAL: huggingface-hub package required for binary download")
             print("   Install with: pip install huggingface-hub")
             return False
 
         try:
-            return self._download_and_extract(bundle_info, force)
+            print("\n" + "="*70)
+            print("DOWNLOADING CUDA BINARIES")
+            print("="*70)
+            success = self._download_and_extract(bundle_info, force)
+            if success:
+                print("\n" + "="*70)
+                print("✅ CUDA BINARIES READY - SDK is now fully functional")
+                print("="*70 + "\n")
+            return success
         except Exception as e:
-            print(f"❌ Error downloading binaries: {str(e)}")
+            print(f"\n❌ Fatal error downloading binaries: {str(e)}")
+            print(f"   Please check your internet connection and try again.")
             return False
 
     def _download_and_extract(self, bundle_info: dict, force: bool = False) -> bool:
         """Download and extract binary bundle."""
         filename = bundle_info["filename"]
         remote_path = f"v{self.VERSION}/{filename}"
+        file_size_gb = 0.834  # Approximate size in GB
 
-        print(f"📥 Downloading {filename} from Hugging Face...")
-        print(f"   This may take a few minutes...")
+        print(f"\n📥 Downloading {filename} (~{file_size_gb}GB) from Hugging Face CDN...")
+        print(f"   Repository: {self.HF_REPO_ID}")
+        print(f"   Remote path: v{self.VERSION}/")
+        print(f"   Destination: {self.cache_dir}/")
+        print(f"\n   This may take 5-15 minutes depending on your internet speed...")
+        print(f"   Please do NOT interrupt this process.")
 
         try:
-            # Download the bundle
+            # Download the bundle with progress
+            print(f"\n⏳ Starting download (hf_hub_download may show progress)...")
             bundle_path = hf_hub_download(
                 repo_id=self.HF_REPO_ID,
                 filename=remote_path,
@@ -114,17 +137,20 @@ class BinaryInstaller:
                 force_download=force,
             )
 
-            print(f"✅ Downloaded to: {bundle_path}")
+            print(f"\n✅ Download complete!")
+            print(f"   Location: {bundle_path}")
 
             # Verify checksum
             expected_sha256 = bundle_info.get("sha256")
             if expected_sha256:
-                print(f"🔒 Verifying checksum...")
+                print(f"\n🔒 Verifying integrity (SHA256 checksum)...")
                 if not self.verify_checksum(Path(bundle_path), expected_sha256):
                     raise ValueError(f"SHA256 checksum mismatch for {filename}")
-                print(f"✅ Checksum verified")
+                print(f"✅ Integrity verified - file is not corrupted")
 
-            print(f"📦 Extracting binaries...")
+            print(f"\n📦 Extracting binaries (this may take 1-2 minutes)...")
+            print(f"   Source: {bundle_path}")
+            print(f"   Target: {self.cache_dir}/extracted/")
 
             # Extract the bundle
             extract_dir = self.cache_dir / "extracted"
@@ -133,17 +159,24 @@ class BinaryInstaller:
             with tarfile.open(bundle_path, "r:gz") as tar:
                 self._safe_extractall(tar, extract_dir)
 
-            print(f"✅ Extracted to: {extract_dir}")
+            print(f"✅ Extraction complete!")
+            print(f"   Extracted to: {extract_dir}")
+            print(f"   Contents: llama-dist/ nccl-dist/")
 
             # Create marker file
             marker_file = self.cache_dir / ".installed"
             marker_file.write_text(self.VERSION)
 
-            print(f"✅ Binary installation complete!")
+            print(f"\n✅ CUDA binaries ready!")
+            print(f"   Binaries: {extract_dir}/llama-dist/bin/")
+            print(f"   Libraries: {extract_dir}/llama-dist/lib/ + {extract_dir}/nccl-dist/lib/")
             return True
 
         except Exception as e:
-            print(f"❌ Extraction failed: {str(e)}")
+            print(f"\n❌ Download/extraction failed!")
+            print(f"   Error: {str(e)}")
+            print(f"\n   Try again with:")
+            print(f"   python -c \"from local_llama_inference import BinaryInstaller; BinaryInstaller().download_binary(force=True)\"")
             return False
 
     def verify_checksum(self, file_path: Path, expected_sha256: str) -> bool:
@@ -208,21 +241,57 @@ def ensure_binaries_installed() -> dict:
     Ensure binaries are installed and return their paths.
 
     This is called automatically on first import of the package.
+    Downloads ~834MB CUDA binaries from Hugging Face on first use.
 
     Returns:
         Dictionary with paths to binary directories
+
+    Raises:
+        Exception: If download fails (not caught - let caller handle)
     """
     installer = BinaryInstaller()
 
     if not installer.is_installed():
-        print("🚀 First-time setup: Installing local-llama-inference binaries...")
-        if not installer.download_binary():
-            print("⚠️  Could not download binaries automatically.")
-            print("   Please download manually from:")
-            print(f"   https://huggingface.co/datasets/{installer.HF_REPO_ID}")
-            return {}
+        print("\n" + "="*70)
+        print("🚀 FIRST-TIME SETUP: Installing local-llama-inference binaries")
+        print("="*70)
+        print("\nThis will download ~834MB of CUDA binaries from Hugging Face CDN.")
+        print("Download location: https://huggingface.co/datasets/waqasm86/Local-Llama-Inference")
+        print("Installation path: ~/.local/share/local-llama-inference/")
+        print("\nDownload may take 5-15 minutes depending on internet speed...")
+        print("-"*70 + "\n")
 
-    return installer.get_binary_paths()
+        try:
+            success = installer.download_binary()
+            if not success:
+                raise RuntimeError(
+                    "Binary download failed. Check your internet connection and try again."
+                )
+            print("\n" + "="*70)
+            print("✅ Binaries installed successfully!")
+            print("="*70 + "\n")
+        except Exception as e:
+            print("\n" + "="*70)
+            print("❌ Binary download failed!")
+            print("="*70)
+            print(f"\nError: {str(e)}")
+            print("\nPlease try one of the following:")
+            print("1. Check your internet connection and try again")
+            print("2. Manually download from:")
+            print(f"   https://huggingface.co/datasets/{installer.HF_REPO_ID}")
+            print("3. Run: python -c \"from local_llama_inference import BinaryInstaller; BinaryInstaller().download_binary(force=True)\"")
+            print()
+            raise
+
+    paths = installer.get_binary_paths()
+
+    if not paths or not any(paths.values()):
+        raise RuntimeError(
+            "Binaries installed but paths could not be resolved. "
+            "Please check ~/.local/share/local-llama-inference/extracted/ exists."
+        )
+
+    return paths
 
 
 if __name__ == "__main__":
