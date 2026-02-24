@@ -22,15 +22,45 @@ logger = logging.getLogger(__name__)
 class LlamaServer:
     """Manages llama-server subprocess."""
 
-    def __init__(self, config: ServerConfig, binary_path: Optional[str] = None):
+    def __init__(self, config: Optional[ServerConfig] = None, binary_path: Optional[str] = None, **kwargs):
         """
         Initialize LlamaServer.
 
         Args:
-            config: ServerConfig instance
+            config: ServerConfig instance (alternative to kwargs)
             binary_path: Path to llama-server binary (auto-detected if not provided)
+            **kwargs: ServerConfig parameters as keyword arguments
+                - model_path (required if config not provided)
+                - host (default: "127.0.0.1")
+                - port (default: 8080)
+                - n_gpu_layers (default: 99)
+                - n_threads (default: -1)
+                - ctx_size (default: 4096)
+                - batch_size (default: 512)
+                - And all other ServerConfig parameters
+
+        Examples:
+            # Using ServerConfig object
+            config = ServerConfig(model_path="model.gguf", n_gpu_layers=33)
+            server = LlamaServer(config=config)
+
+            # Using keyword arguments (convenience)
+            server = LlamaServer(model_path="model.gguf", n_gpu_layers=33)
+
+        Raises:
+            ValueError: If neither config nor model_path provided
         """
-        self.config = config
+        if config is not None:
+            # Use provided config
+            self.config = config
+        elif kwargs:
+            # Create config from kwargs
+            if "model_path" not in kwargs:
+                raise ValueError("Either 'config' or 'model_path' parameter must be provided")
+            self.config = ServerConfig(**kwargs)
+        else:
+            raise ValueError("Either 'config' or 'model_path' parameter must be provided")
+
         self._process: Optional[subprocess.Popen] = None
         self._binary = binary_path or self._find_binary()
 

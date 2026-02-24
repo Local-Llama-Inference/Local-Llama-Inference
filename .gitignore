@@ -204,6 +204,14 @@ cython_debug/
 .pypirc
 .pypirc.bak
 
+# Hugging Face API tokens and credentials
+.huggingface/
+hf_token.txt
+hf_api_key.txt
+*_token.txt
+*_api_key.txt
+*_credentials.txt
+
 # Pip install cache (local-llama-inference binaries)
 # Users' cached binaries are in ~/.local/share/local-llama-inference/
 # This is NOT checked into version control
