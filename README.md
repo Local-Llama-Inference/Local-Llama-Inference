@@ -1,99 +1,37 @@
-# Local-Llama-Inference
+# Local-Llama-Inference v0.1.0
 
 ![Version](https://img.shields.io/badge/version-0.1.0-blue)
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
+![Status](https://img.shields.io/badge/status-Production%20Ready-brightgreen)
 
 **A Production-Ready Python SDK for GPU-Accelerated LLM Inference**
 
-Local-Llama-Inference is a comprehensive Python SDK that integrates **llama.cpp** and **NVIDIA NCCL** to enable high-performance inference of GGUF-quantized Large Language Models (LLMs) on single and multiple NVIDIA GPUs.
+Local-Llama-Inference is a comprehensive Python SDK that integrates **llama.cpp** and **NVIDIA NCCL** to enable high-performance inference of GGUF-quantized Large Language Models (LLMs) on single and multiple NVIDIA GPUs. With automatic binary downloads and zero-configuration setup, getting started is as simple as one command.
 
 ---
 
-## 🎯 Features
+## 🚀 Quick Start (2 Minutes)
 
-### 🚀 Core Capabilities
-- **Single GPU Inference** - Automatic memory optimization and layer offloading
-- **Multi-GPU Support** - Tensor parallelism with automatic split suggestions
-- **30+ REST API Endpoints** - Full llama.cpp endpoint coverage
-- **OpenAI-Compatible API** - Drop-in compatible `/v1/chat/completions` endpoint
-- **Streaming Responses** - Token-by-token streaming via Python generators
-- **Production-Ready** - Error handling, process management, health checks
-
-### 🔌 API Support
-```python
-# Chat & Completions
-client.chat()              # Chat completion (non-streaming)
-client.stream_chat()       # Chat with token streaming
-client.complete()          # Text completion
-client.stream_complete()   # Streaming completion
-
-# Embeddings & Reranking
-client.embed()            # Generate embeddings
-client.rerank()           # Cross-encoder reranking
-
-# Token Utilities
-client.tokenize()         # Text to tokens
-client.detokenize()       # Tokens to text
-client.apply_template()   # Apply chat template
-
-# Advanced Features
-client.infill()           # Code infilling
-client.set_lora_adapters() # LoRA support
-client.save_slot()        # Slot management
-client.restore_slot()     # Restore saved state
-
-# Server Management
-client.health()           # Health check
-client.get_props()        # Get server properties
-client.get_metrics()      # Performance metrics
-```
-
-### 🎮 GPU Utilities
-```python
-from local_llama_inference import detect_gpus, suggest_tensor_split, check_cuda_version
-
-# Detect available GPUs
-gpus = detect_gpus()
-
-# Get automatic tensor split for multi-GPU
-tensor_split = suggest_tensor_split(gpus)
-
-# Check CUDA version
-cuda_version = check_cuda_version()
-```
-
-### 📊 NCCL Collective Operations
-```python
-from local_llama_inference._bindings.nccl_binding import NCCLBinding
-
-# Direct access to NCCL primitives
-nccl = NCCLBinding('/path/to/libnccl.so.2')
-nccl.all_reduce(sendbuff, recvbuff, ncclFloat32, ncclSum, comm)
-nccl.broadcast(buffer, ncclFloat32, root, comm)
-nccl.all_gather(sendbuff, recvbuff, ncclFloat32, comm)
-```
-
----
-
-## ⚡ TL;DR - Get Started in 30 Seconds
+### Installation (One Command!)
 
 ```bash
-# Step 1: Install (takes 1 minute)
+# Install from GitHub (available now)
+pip install git+https://github.com/Local-Llama-Inference/Local-Llama-Inference.git@v0.1.0
+
+# Or when published to PyPI (coming soon)
 pip install local-llama-inference
+```
 
-# Step 2: Download binaries (takes 10-15 minutes, once only)
-# This happens automatically on first use:
-python -c "from local_llama_inference import LlamaServer; print('✅ Ready!')"
+### First Use (Auto-Downloads CUDA Binaries - 10-15 minutes)
 
-# Step 3: Download a model and start using!
-wget https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/Mistral-7B-Instruct-v0.1.Q4_K_M.gguf
-
-# Step 4: Run inference
-python << 'EOF'
+```python
 from local_llama_inference import LlamaServer, LlamaClient
 
-server = LlamaServer(model_path="./Mistral-7B-Instruct-v0.1.Q4_K_M.gguf", n_gpu_layers=33)
+# First import triggers auto-download of 834 MB CUDA binaries
+# Downloaded once, cached for future use
+
+server = LlamaServer(model_path="Mistral-7B.gguf", n_gpu_layers=33)
 server.start()
 server.wait_ready()
 
@@ -102,169 +40,190 @@ response = client.chat_completion(
     messages=[{"role": "user", "content": "What is machine learning?"}]
 )
 print(response.choices[0].message.content)
+
 server.stop()
-EOF
 ```
 
-That's it! You now have a fully functional GPU-accelerated LLM inference system. ✨
+### Download a Model
+
+```bash
+# Get Mistral 7B Q4 quantized (4.3 GB)
+wget https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/Mistral-7B-Instruct-v0.1.Q4_K_M.gguf
+
+# Or find more at: https://huggingface.co/models?search=gguf
+```
 
 ---
 
-## 🔄 How It Works: Automatic Binary Installation
+## ✨ Key Features
 
+### 🎯 Core Capabilities
+- **Single GPU Inference** - Automatic memory optimization and layer offloading
+- **Multi-GPU Support** - Tensor parallelism with automatic distribution suggestions
+- **30+ REST API Endpoints** - Full llama.cpp endpoint coverage
+- **OpenAI-Compatible API** - Drop-in compatible `/v1/chat/completions` endpoint
+- **Streaming Responses** - Token-by-token streaming via Python generators
+- **Production-Ready** - Error handling, process management, health checks
+- **Auto-Binary Download** - CUDA binaries download automatically on first use
+
+### 🔌 Complete API Support
+
+```python
+from local_llama_inference import LlamaServer, LlamaClient
+
+client = LlamaClient()
+
+# Chat & Completions
+response = client.chat_completion(messages=[...])
+async for chunk in client.stream_chat(messages=[...]):
+    print(chunk.choices[0].delta.content)
+
+# Embeddings
+embeddings = client.embed(input="Your text here")
+
+# Token Operations
+tokens = client.tokenize(prompt="Hello world")
+text = client.detokenize(tokens=tokens)
+
+# Advanced Features
+client.rerank(query="...", documents=[...])
+client.infill(...)  # Code infilling
+client.set_lora_adapters(...)  # LoRA support
+
+# Server Management
+health = client.health()
+props = client.get_props()
+metrics = client.get_metrics()
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ Step 1: User runs: pip install local-llama-inference        │
-│         ↓                                                    │
-│ Step 2: PyPI delivers small Python package (29 KB wheel)    │
-│         ↓                                                    │
-│ Step 3: User imports: from local_llama_inference import ... │
-│         ↓                                                    │
-│ Step 4: Package detects binaries are missing                │
-│         ↓                                                    │
-│ Step 5: Auto-downloads 834 MB from Hugging Face CDN         │
-│         (Fast: ~1-2 Mbps, takes ~10-15 minutes)             │
-│         ↓                                                    │
-│ Step 6: Extracts to ~/.local/share/local-llama-inference/   │
-│         ↓                                                    │
-│ Step 7: Ready to use! (cached for future runs)              │
-│         ↓                                                    │
-│ Result: ✅ Full SDK with CUDA binaries ready to go!         │
-└─────────────────────────────────────────────────────────────┘
+
+### 🎮 GPU Utilities
+
+```python
+from local_llama_inference import detect_gpus, suggest_tensor_split, check_cuda_version
+
+# Auto-detect available GPUs
+gpus = detect_gpus()
+for gpu in gpus:
+    print(f"GPU {gpu.index}: {gpu.name} ({gpu.total_memory_mb}MB)")
+
+# Get optimal tensor distribution for multi-GPU
+tensor_split = suggest_tensor_split(gpus)
+
+# Check CUDA compatibility
+cuda_version = check_cuda_version()
 ```
 
-### Why This Approach?
+### 🛠️ Command-Line Interface
 
-| Aspect | Benefit |
-|--------|---------|
-| **Installation** | Single command: `pip install local-llama-inference` |
-| **Package Size** | Tiny wheel (29 KB) vs. huge tarball (834 MB) |
-| **Dependencies** | Auto-installed with pip (httpx, pydantic, huggingface-hub) |
-| **Binary Delivery** | Hugging Face CDN (fast, reliable, scalable) |
-| **Storage** | Binaries cached in `~/.local/share/` (standard XDG location) |
-| **Updates** | Simple `pip install --upgrade` for new versions |
-| **Management** | CLI tools: `llama-inference install/verify/info` |
+```bash
+# Download CUDA binaries from Hugging Face
+llama-inference install
+
+# Verify installation status
+llama-inference verify
+
+# Show package information
+llama-inference info
+
+# Force reinstall (e.g., if corrupted)
+llama-inference install --force
+
+# Use custom cache directory
+llama-inference install --cache-dir /path/to/cache
+```
 
 ---
 
-## 📋 System Requirements
+## 📋 Installation Methods
+
+### Method 1: From GitHub (Recommended for Now)
+```bash
+pip install git+https://github.com/Local-Llama-Inference/Local-Llama-Inference.git@v0.1.0
+```
+**Status**: ✅ Available now
+**Time**: ~1 minute (+ 10-15 minutes for first binary download)
+
+### Method 2: From PyPI (Coming Soon)
+```bash
+pip install local-llama-inference
+```
+**Status**: ⏳ Ready to publish
+**When**: Run `twine upload dist/*`
+
+### Method 3: From Source
+```bash
+git clone https://github.com/Local-Llama-Inference/Local-Llama-Inference.git
+cd Local-Llama-Inference/local-llama-inference
+pip install -e .
+```
+**Status**: ✅ Available now
+**Time**: ~1 minute (+ 10-15 minutes for first binary download)
+
+---
+
+## 💻 System Requirements
 
 ### Minimum
-- **GPU**: NVIDIA compute capability 5.0+ (sm_50)
-  - Tesla K80, K40 | GeForce GTX 750 Ti
+- **GPU**: NVIDIA compute capability 5.0+ (Kepler K80, K40, GTX 750 Ti)
 - **VRAM**: 2GB+ per GPU
-- **Python**: 3.8+
+- **Python**: 3.8 - 3.12
 - **OS**: Linux x86_64
 - **RAM**: 8GB+ system memory
+- **CUDA**: 11.5+ (runtime included in auto-downloaded binaries)
 
 ### Recommended
 - **GPU**: RTX 2060 or newer (sm_75+)
 - **VRAM**: 4GB+ per GPU
 - **RAM**: 16GB+ system memory
-- **CUDA**: Any version 11.5+ (runtime included)
+- **Python**: 3.10+
 
 ### Supported GPUs
-✅ Kepler (sm_50) - Tesla K80, K40, GTX 750 Ti
-✅ Maxwell (sm_61) - GTX 750, GTX 950, GTX 1050
-✅ Pascal (sm_61) - GTX 1060, GTX 1080
-✅ Volta (sm_70) - Tesla V100
-✅ Turing (sm_75) - RTX 2060, RTX 2080
-✅ Ampere (sm_80) - RTX 3060, RTX 3090
-✅ Ada (sm_86) - RTX 4080, RTX 6000
-✅ Hopper (sm_89) - H100, H200
+✅ **Kepler** (sm_50) - Tesla K80, K40, GTX 750 Ti
+✅ **Maxwell** (sm_61) - GTX 750, GTX 950, GTX 1050
+✅ **Pascal** (sm_61) - GTX 1060, GTX 1080
+✅ **Volta** (sm_70) - Tesla V100
+✅ **Turing** (sm_75) - RTX 2060, RTX 2080, RTX 20 series
+✅ **Ampere** (sm_80) - RTX 3060, RTX 3080, RTX 3090
+✅ **Ada** (sm_86) - RTX 4080, RTX 6000 Ada
+✅ **Hopper** (sm_89) - H100, H200
 
 ---
 
-## ⚡ Quick Start (5 Minutes)
+## 📦 Binary Distribution
 
-### 1. Installation
+**What You Get**:
+- llama.cpp (latest version with CUDA support)
+- NVIDIA NCCL 2.29.3 (multi-GPU communication)
+- CUDA 12.8 runtime (full CUDA stack)
+- llama-server (HTTP REST API binary)
+- Helper utilities and documentation
 
-#### ✨ Option A: From PyPI (Recommended - Simplest)
-```bash
-# Install from PyPI - auto-downloads CUDA binaries on first use
-pip install local-llama-inference
+**Bundle Sizes**:
+- **tar.gz**: 834 MB
+- **zip**: 1.48 GB
 
-# On first import, binaries automatically download from Hugging Face (~10-15 minutes)
-python -c "from local_llama_inference import LlamaServer; print('✅ Ready!')"
-```
+**Download Source**:
+- Hugging Face CDN (fast & reliable)
+- https://huggingface.co/datasets/waqasm86/Local-Llama-Inference/
 
-**What happens automatically:**
-- Detects if binaries are already installed
-- If missing: Downloads 834 MB CUDA + llama.cpp bundle from Hugging Face CDN
-- Extracts to: `~/.local/share/local-llama-inference/`
-- Caches for future runs (no re-download needed!)
+**Auto-Download**: On first import (~10-15 minutes, one time only)
+**Cached**: `~/.local/share/local-llama-inference/`
 
-**Optional: Pre-download binaries (avoid waiting on first use)**
-```bash
-# Pre-download binaries without waiting
-llama-inference install
+---
 
-# Verify installation
-llama-inference verify
+## 🎯 Usage Examples
 
-# Show package info
-llama-inference info
-```
+### Basic Chat
 
-#### Option B: From Release Package
-```bash
-# Download from GitHub Releases
-# https://github.com/Local-Llama-Inference/Local-Llama-Inference/releases/tag/v0.1.0
-
-tar -xzf local-llama-inference-complete-v0.1.0.tar.gz
-cd local-llama-inference-v0.1.0
-pip install -e ./python
-```
-
-#### Option C: From Source (Developer)
-```bash
-git clone https://github.com/Local-Llama-Inference/Local-Llama-Inference.git
-cd Local-Llama-Inference/local-llama-inference
-pip install -e .
-
-# Then download binaries
-llama-inference install
-```
-
-### 2. Verify Installation
-
-**After pip install:**
-```bash
-# Quick check
-python -c "from local_llama_inference import LlamaServer, detect_gpus; print('✅ SDK Ready'); print(detect_gpus())"
-
-# More detailed verification
-llama-inference verify
-```
-
-**First-time setup (automatic):**
-```
-🚀 First-time setup: Installing local-llama-inference binaries...
-📥 Downloading local-llama-inference-complete-v0.1.0.tar.gz from Hugging Face...
-   This may take a few minutes...
-✅ Downloaded to: ~/.local/share/local-llama-inference/
-📦 Extracting binaries...
-✅ Extracted to: ~/.local/share/local-llama-inference/extracted
-✅ Binary installation complete!
-```
-
-### 3. Download a Model
-```bash
-# Download Mistral 7B Q4 (quantized, ~4GB)
-wget https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/Mistral-7B-Instruct-v0.1.Q4_K_M.gguf
-
-# Or find more models at: https://huggingface.co/models?search=gguf
-```
-
-### 4. Run Your First Inference
 ```python
 from local_llama_inference import LlamaServer, LlamaClient
 
-# Start the server
+# Start server
 server = LlamaServer(
-    model_path="./Mistral-7B-Instruct-v0.1.Q4_K_M.gguf",
-    n_gpu_layers=33,  # Offload all layers to GPU
-    n_ctx=2048,       # Context window
+    model_path="Mistral-7B-Instruct-v0.1.Q4_K_M.gguf",
+    n_gpu_layers=33,      # Offload all layers to GPU
+    n_ctx=2048,           # Context window
+    n_batch=512,          # Batch size
     host="127.0.0.1",
     port=8000
 )
@@ -274,7 +233,7 @@ server.start()
 server.wait_ready(timeout=60)
 print("✅ Server ready!")
 
-# Create client and send request
+# Create client and chat
 client = LlamaClient(base_url="http://127.0.0.1:8000")
 
 response = client.chat_completion(
@@ -288,90 +247,16 @@ response = client.chat_completion(
 
 print("Assistant:", response.choices[0].message.content)
 
-# Cleanup
-server.stop()
-```
-
----
-
-## 🛠️ CLI Tools
-
-After installation, you get command-line tools to manage binaries:
-
-```bash
-# Install/download CUDA binaries from Hugging Face
-llama-inference install
-
-# Verify binaries are installed and accessible
-llama-inference verify
-
-# Show package version and links
-llama-inference info
-
-# Force reinstall (e.g., if corrupted)
-llama-inference install --force
-
-# Use custom cache directory
-llama-inference install --cache-dir ~/.cache/llama-inference
-
-# Show help
-llama-inference --help
-```
-
-**Example output:**
-```
-🔧 local-llama-inference 0.1.0
-   Installing/updating binaries...
-
-📥 Downloading local-llama-inference-complete-v0.1.0.tar.gz from Hugging Face...
-   This may take a few minutes...
-✅ Downloaded to: /home/user/.local/share/local-llama-inference/
-📦 Extracting binaries...
-✅ Extracted to: /home/user/.local/share/local-llama-inference/extracted
-✅ Binary installation complete!
-
-📁 Binary paths:
-   llama_bin: /home/user/.local/share/local-llama-inference/extracted/llama-dist/bin
-   llama_lib: /home/user/.local/share/local-llama-inference/extracted/llama-dist/lib
-   nccl_lib: /home/user/.local/share/local-llama-inference/extracted/nccl-dist/lib
-   nccl_include: /home/user/.local/share/local-llama-inference/extracted/nccl-dist/include
-```
-
----
-
-## 📚 Getting Started Tutorials
-
-### Basic Chat Example
-```python
-from local_llama_inference import LlamaServer, LlamaClient
-
-# Configure and start server
-server = LlamaServer(
-    model_path="model.gguf",
-    n_gpu_layers=33,      # Use GPU
-    main_gpu=0,           # Primary GPU
-    n_ctx=2048,           # Context size
-    n_batch=512,          # Batch size
-)
-server.start()
-server.wait_ready()
-
-# Simple chat
-client = LlamaClient()
-response = client.chat_completion(
-    messages=[{"role": "user", "content": "Hello!"}]
-)
-print(response.choices[0].message.content)
-
 # Multi-turn conversation
 messages = [
-    {"role": "system", "content": "You are a helpful assistant."},
+    {"role": "system", "content": "You are a helpful AI assistant."},
     {"role": "user", "content": "What is Python?"},
 ]
 
 response = client.chat_completion(messages=messages)
 print("Assistant:", response.choices[0].message.content)
 
+# Continue conversation
 messages.append({"role": "assistant", "content": response.choices[0].message.content})
 messages.append({"role": "user", "content": "How is it used in AI?"})
 
@@ -382,6 +267,7 @@ server.stop()
 ```
 
 ### Streaming Responses
+
 ```python
 from local_llama_inference import LlamaServer, LlamaClient
 
@@ -391,7 +277,7 @@ server.wait_ready()
 
 client = LlamaClient()
 
-# Stream tokens in real-time
+# Stream tokens as they arrive
 for token in client.stream_chat(
     messages=[{"role": "user", "content": "Write a poem about AI"}]
 ):
@@ -402,6 +288,7 @@ server.stop()
 ```
 
 ### Multi-GPU Inference
+
 ```python
 from local_llama_inference import (
     LlamaServer, LlamaClient, detect_gpus, suggest_tensor_split
@@ -410,6 +297,8 @@ from local_llama_inference import (
 # Detect GPUs
 gpus = detect_gpus()
 print(f"Found {len(gpus)} GPU(s)")
+for gpu in gpus:
+    print(f"  {gpu.name}: {gpu.total_memory_mb}MB")
 
 # Get suggested tensor split
 tensor_split = suggest_tensor_split(gpus)
@@ -419,7 +308,7 @@ print(f"Suggested tensor split: {tensor_split}")
 server = LlamaServer(
     model_path="model.gguf",
     n_gpu_layers=33,
-    tensor_split=tensor_split,  # Distribute layers across GPUs
+    tensor_split=tensor_split,  # Distribute across GPUs
 )
 server.start()
 server.wait_ready()
@@ -435,6 +324,7 @@ server.stop()
 ```
 
 ### Embeddings
+
 ```python
 from local_llama_inference import LlamaServer, LlamaClient
 
@@ -444,39 +334,21 @@ server.wait_ready()
 
 client = LlamaClient()
 
-# Single embedding
-embedding = client.embed(input="What is machine learning?")
-print(f"Embedding dimension: {len(embedding.data[0].embedding)}")
+# Generate embeddings
+embeddings = client.embed(input="What is machine learning?")
+print(f"Embedding dimension: {len(embeddings.data[0].embedding)}")
 
 # Batch embeddings
-embeddings = client.embed(
+batch_embeddings = client.embed(
     input=[
         "Machine learning is a subset of AI",
         "Deep learning uses neural networks",
         "LLMs are large language models"
     ]
 )
-print(f"Generated {len(embeddings.data)} embeddings")
+print(f"Generated {len(batch_embeddings.data)} embeddings")
 
 server.stop()
-```
-
-### Advanced: NCCL Operations
-```python
-from local_llama_inference._bindings.nccl_binding import NCCLBinding, NCCLDataType, NCCLRedOp
-import numpy as np
-
-# Load NCCL
-nccl = NCCLBinding('/path/to/libnccl.so.2')
-
-# AllReduce operation
-sendbuff = np.array([1.0, 2.0, 3.0], dtype=np.float32)
-recvbuff = np.zeros_like(sendbuff)
-
-# This would require NCCL communicator setup
-# nccl.all_reduce(sendbuff.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
-#                 recvbuff.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
-#                 len(sendbuff), NCCLDataType.FLOAT32, NCCLRedOp.SUM, comm)
 ```
 
 ---
@@ -484,10 +356,10 @@ recvbuff = np.zeros_like(sendbuff)
 ## 🔧 Configuration
 
 ### Server Configuration
+
 ```python
 from local_llama_inference import ServerConfig, SamplingConfig
 
-# Create configuration
 config = ServerConfig(
     # Model
     model_path="./model.gguf",
@@ -522,16 +394,18 @@ args = config.to_args()
 
 # Create server
 server = LlamaServer(config)
+server.start()
 ```
 
 ### Sampling Configuration
+
 ```python
 from local_llama_inference import SamplingConfig
 
 sampling_config = SamplingConfig(
     temperature=0.7,           # Higher = more random
-    top_k=40,                  # Nucleus sampling
-    top_p=0.9,                 # Cumulative probability
+    top_k=40,                  # Top-k sampling
+    top_p=0.9,                 # Nucleus sampling
     min_p=0.05,                # Minimum probability
     repeat_penalty=1.1,        # Penalize repetition
     mirostat=0,                # Mirostat sampling (0=off)
@@ -551,296 +425,194 @@ response = client.chat_completion(
 
 ---
 
-## 📖 API Reference
-
-### `LlamaServer` - Process Management
-```python
-server = LlamaServer(config, binary_path=None)
-
-# Methods
-server.start(wait_ready=False, timeout=60)     # Start server
-server.stop()                                   # Stop server
-server.restart()                                # Restart server
-server.is_running()                             # Check status
-server.wait_ready(timeout=60)                   # Wait for /health
-```
-
-### `LlamaClient` - HTTP REST Client
-```python
-client = LlamaClient(base_url="http://127.0.0.1:8000", api_key=None)
-
-# Chat & Completions
-client.chat_completion(messages, model=None, **kwargs)
-client.stream_chat(messages, model=None, **kwargs)
-client.complete(prompt, model=None, **kwargs)
-client.stream_complete(prompt, model=None, **kwargs)
-
-# Embeddings
-client.embed(input, model=None)
-client.rerank(model, query, documents)
-
-# Tokens
-client.tokenize(prompt, add_special=True)
-client.detokenize(tokens)
-client.apply_template(messages, add_generation_prompt=True)
-
-# Server Info
-client.health()                    # GET /health
-client.get_props()                 # GET /props
-client.set_props(props)            # POST /props
-client.get_metrics()               # GET /metrics
-client.get_models()                # GET /models
-client.get_slots()                 # GET /slots
-```
-
-### `detect_gpus()` - GPU Detection
-```python
-gpus = detect_gpus()
-# Returns: List[GPUInfo]
-# Each GPUInfo has: index, name, uuid, compute_capability, total_memory_mb, free_memory_mb
-
-for gpu in gpus:
-    print(f"GPU {gpu.index}: {gpu.name}")
-    print(f"  Compute Capability: {gpu.compute_capability}")
-    print(f"  VRAM: {gpu.total_memory_mb} MB ({gpu.free_memory_mb} MB free)")
-    print(f"  Supports Flash Attention: {gpu.supports_flash_attn()}")
-```
-
-### `suggest_tensor_split()` - Auto Multi-GPU
-```python
-tensor_split = suggest_tensor_split(gpus)
-# Automatically calculates optimal layer distribution
-# Returns: List[float] summing to 1.0
-```
-
----
-
 ## 🛠️ Troubleshooting
 
-### Installation & Auto-Download
+### Installation Issues
 
-#### "pip install local-llama-inference" fails
+**"pip install" fails**
 ```bash
-# Make sure pip is up to date
+# Update pip first
 pip install --upgrade pip
 
 # Try again
-pip install local-llama-inference
+pip install git+https://github.com/Local-Llama-Inference/Local-Llama-Inference.git@v0.1.0
 ```
 
-#### Binaries fail to auto-download on first use
+**"huggingface-hub not found"**
 ```bash
-# Manually trigger download with CLI
-llama-inference install
-
-# Or check what's wrong
-llama-inference verify
-
-# Check your internet connection
-ping huggingface.co
-```
-
-#### "huggingface-hub not found"
-```bash
-# The dependency should auto-install, but if it doesn't:
+# Install dependency
 pip install huggingface-hub>=0.16.0
 
 # Then retry
 python -c "from local_llama_inference import LlamaServer"
 ```
 
-#### Binaries partially downloaded (interrupted)
+### Binary Download Issues
+
+**Binaries fail to download on first use**
+```bash
+# Manually trigger download
+llama-inference install
+
+# Or check what's wrong
+llama-inference verify
+```
+
+**Binaries partially downloaded (interrupted)**
 ```bash
 # Force re-download
 llama-inference install --force
 
-# Or clean up and restart
+# Or clean and restart
 rm -rf ~/.local/share/local-llama-inference/
 llama-inference install
 ```
 
-#### Low disk space warning during download
-```bash
-# Binaries need ~1 GB temporary space for extraction
-# Check available space
-df -h
-
-# If needed, set custom cache directory
-LLAMA_INFERENCE_CACHE=/path/to/larger/disk python your_script.py
-
-# Or use CLI with custom cache
-llama-inference install --cache-dir /path/to/custom/location
-```
-
 ### Runtime Issues
 
-### "CUDA out of memory"
+**"CUDA out of memory"**
 ```python
-# Solution 1: Reduce GPU layers
+# Reduce GPU layers
 server = LlamaServer(model_path="model.gguf", n_gpu_layers=15)
 
-# Solution 2: Use smaller quantization
-# Download Q2 or Q3 instead of Q5/Q6
-
-# Solution 3: Reduce batch size
-server = LlamaServer(model_path="model.gguf", n_batch=256)
+# Or use smaller quantization (Q2, Q3 instead of Q5, Q6)
 ```
 
-### "GPU not found"
+**"GPU not found"**
 ```bash
 # Check NVIDIA driver
 nvidia-smi
 
-# Verify NVIDIA driver is installed
-# https://www.nvidia.com/Download/driverDetails.aspx
-
-# Check compute capability
+# Verify in Python
 python -c "from local_llama_inference import detect_gpus; print(detect_gpus())"
 ```
 
-### "libcudart.so.12 not found"
-```bash
-# The complete package includes CUDA runtime
-
-# Or install NVIDIA drivers:
-sudo apt update
-sudo apt install nvidia-driver-XXX  # Replace XXX with version
-sudo reboot
-```
-
-### "Server startup timeout"
+**"Server startup timeout"**
 ```python
 # Increase timeout
 server.wait_ready(timeout=120)  # Default is 60 seconds
 
-# Or check server logs for errors
+# Or check server logs
 server.start(wait_ready=False)
+import time
 time.sleep(5)
 # Check console for error messages
 ```
 
-### Slow Inference
-```python
-# Increase GPU offloading
-n_gpu_layers=33  # Offload all layers
+---
 
-# Check GPU utilization
-nvidia-smi -l 1  # Refresh every second
+## 📚 Documentation
 
-# Use larger models with better quantization (Q5, Q6 instead of Q2)
-# Reduce context size if not needed
-```
+- **[Quick Start Guide](QUICK_START_PIP.md)** - Get running in 4 minutes
+- **[Installation Guide](PIP_INSTALL_SETUP.md)** - Detailed setup instructions
+- **[PyPI Publishing](PYPI_PUBLISHING_GUIDE.md)** - How to publish to PyPI
+- **[Complete Setup Summary](COMPLETE_PIP_INSTALL_SETUP.md)** - Full technical details
 
 ---
 
-## 🔗 Key Files & Directories
+## 🔗 Resources
+
+| Resource | URL |
+|----------|-----|
+| **GitHub Repository** | https://github.com/Local-Llama-Inference/Local-Llama-Inference |
+| **GitHub Releases** | https://github.com/Local-Llama-Inference/Local-Llama-Inference/releases |
+| **Hugging Face Binaries** | https://huggingface.co/datasets/waqasm86/Local-Llama-Inference/ |
+| **Hugging Face Project** | https://huggingface.co/waqasm86/local-llama-inference |
+| **PyPI Package** | https://pypi.org/project/local-llama-inference/ |
+| **GGUF Models** | https://huggingface.co/models?search=gguf |
+
+---
+
+## 🎓 Learning Resources
+
+### Official Documentation
+- [llama.cpp Documentation](https://github.com/ggml-org/llama.cpp/tree/master/docs)
+- [GGUF Format Specification](https://github.com/ggml-org/gguf)
+- [NCCL User Guide](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/)
+
+### Finding Models
+- **Mistral**: https://huggingface.co/mistralai
+- **Llama**: https://huggingface.co/meta-llama
+- **Phi**: https://huggingface.co/microsoft/phi-2
+- **All GGUF Models**: https://huggingface.co/models?search=gguf
+
+### Performance Tips
+1. **Use Flash Attention** - Set `flash_attn=True` for 2-3x speedup
+2. **Increase GPU Layers** - Higher `n_gpu_layers` = faster but more VRAM
+3. **Larger Context** - Higher `n_ctx` = better context understanding
+4. **Batch Size** - `n_batch=512` good for most GPUs
+5. **Quantization** - Q4 (~4GB), Q5 (~5GB), Q6 (~6GB)
+6. **Multi-GPU** - Use `tensor_split` to distribute across GPUs
+7. **Keep Server Alive** - Reuse server instance instead of restart cycles
+
+---
+
+## 📦 Project Structure
 
 ```
 local-llama-inference/
-├── src/local_llama_inference/        # Python SDK source
-│   ├── __init__.py                   # Public API
-│   ├── server.py                     # LlamaServer class
-│   ├── client.py                     # LlamaClient REST wrapper
-│   ├── config.py                     # Configuration classes
-│   ├── gpu.py                        # GPU utilities
-│   ├── exceptions.py                 # Custom exceptions
+├── src/local_llama_inference/
+│   ├── __init__.py                 # Public API exports
+│   ├── server.py                   # LlamaServer class
+│   ├── client.py                   # LlamaClient REST wrapper
+│   ├── config.py                   # Configuration dataclasses
+│   ├── gpu.py                      # GPU detection & utilities
+│   ├── exceptions.py               # Custom exception classes
 │   ├── _bindings/
-│   │   ├── llama_binding.py          # libllama.so ctypes wrapper
-│   │   └── nccl_binding.py           # libnccl.so.2 ctypes wrapper
+│   │   ├── llama_binding.py        # libllama.so ctypes wrapper
+│   │   └── nccl_binding.py         # libnccl.so.2 ctypes wrapper
 │   └── _bootstrap/
-│       ├── finder.py                 # Binary locator
-│       └── extractor.py              # Bundle extractor
-├── examples/                          # Tutorial scripts
-│   ├── single_gpu_chat.py
-│   ├── multi_gpu_tensor_split.py
-│   ├── streaming_chat.py
-│   ├── embeddings_example.py
-│   └── nccl_bindings_example.py
-├── tests/                             # Unit tests
-├── pyproject.toml                    # Package metadata
-├── README.md                         # This file
-├── LICENSE                           # MIT License
-└── releases/v0.1.0/                 # Release artifacts
+│       ├── finder.py               # Binary locator
+│       ├── extractor.py            # Bundle extractor
+│       └── installer.py            # Hugging Face downloader
+│
+├── examples/
+│   ├── single_gpu_chat.py          # Basic chat example
+│   ├── multi_gpu_tensor_split.py   # Multi-GPU setup
+│   ├── streaming_chat.py           # Streaming example
+│   ├── embeddings_example.py       # Embedding generation
+│   └── nccl_bindings_example.py    # Direct NCCL usage
+│
+├── tests/                          # Unit test suite
+├── setup.py                        # Package configuration
+├── README.md                       # This file
+├── LICENSE                         # MIT License
+└── releases/v0.1.0/               # Release artifacts
     ├── local-llama-inference-complete-v0.1.0.tar.gz
-    ├── local-llama-inference-sdk-v0.1.0.tar.gz
-    └── CHECKSUMS.txt
+    ├── local-llama-inference-complete-v0.1.0.zip
+    └── checksums.txt
 ```
 
 ---
 
-## 📦 Dependencies
+## 📊 Dependencies
 
-### Python Packages (Auto-Installed via pip)
+### Required
+- **httpx** >= 0.24.0 - Async HTTP client for REST API
+- **pydantic** >= 2.0 - Data validation and settings management
+- **huggingface-hub** >= 0.16.0 - For downloading binaries from Hugging Face
 
-| Package | Purpose | Version |
-|---------|---------|---------|
-| **httpx** | Async HTTP client for REST API calls to llama-server | >= 0.24.0 |
-| **pydantic** | Data validation and configuration management | >= 2.0 |
-| **huggingface-hub** | Auto-download of CUDA binaries from Hugging Face | >= 0.16.0 |
-
-### System Requirements
-
-- **NVIDIA CUDA Runtime** - Included in auto-downloaded binaries
-  - If pre-built: No CUDA installation needed
-  - If building from source: CUDA 11.5+ toolkit
-- **NVIDIA Drivers** - Required, any recent version (≥ 418)
-- **Python** - 3.8 through 3.12
-
-### Optional (Development Only)
+### Optional (Development)
 - **pytest** >= 7.0 - Unit testing
 - **pytest-asyncio** >= 0.21.0 - Async test support
 - **black** >= 23.0 - Code formatting
 - **mypy** >= 1.0 - Type checking
 - **ruff** >= 0.1.0 - Linting
 
-### Binary Components (Downloaded Automatically)
-
-When you first use the package, these are auto-downloaded from Hugging Face:
-
-| Component | Size | Source |
-|-----------|------|--------|
-| **llama.cpp** | ~40 MB | Compiled binaries + libraries |
-| **NCCL 2.29.3** | ~52 MB | NVIDIA Collective Communication |
-| **CUDA Runtime** | ~150 MB | NVIDIA CUDA 12.8 runtime libs |
-| **Documentation** | ~2 MB | README + guides |
-| **Total** | ~834 MB | Hosted on Hugging Face CDN |
-
-**Download Location:**
-```
-https://huggingface.co/datasets/waqasm86/Local-Llama-Inference/
-```
-
-**Cache Location (after download):**
-```
-~/.local/share/local-llama-inference/
-```
+### System
+- **NVIDIA CUDA** - Runtime included in auto-downloaded binaries
+- **NVIDIA Drivers** - Required (any recent version ≥ 418)
 
 ---
 
-## 🚀 Performance Tips
+## 🔐 Security & Privacy
 
-1. **Use Flash Attention** - Set `flash_attn=True` for 2-3x speedup
-2. **Increase Context** - Larger `n_ctx` = slower but better context
-3. **Batch Size** - `n_batch=512` good for most cases
-4. **GPU Layers** - Higher `n_gpu_layers` = faster but more VRAM
-5. **Quantization** - Q4 = 4GB, Q5 = 5GB, Q6 = 6GB typical sizes
-6. **Multi-GPU** - Use `tensor_split` to distribute across GPUs
-7. **Keep Alive** - Reuse server instance instead of restart/start cycles
-
----
-
-## 🔐 Security
-
-- **API Keys** - Optional API key support via `ServerConfig.api_key`
-- **Local Only** - Bind to `127.0.0.1` for local development
-- **Production** - Consider authentication/TLS for production deployments
-- **Model Files** - Keep GGUF files private, don't share URLs publicly
-
----
-
-## 📄 License
-
-MIT License - See `LICENSE` file for details
+- ✅ **Open Source** - Full source code visible (MIT license)
+- ✅ **No Tracking** - No telemetry or data collection
+- ✅ **SHA256 Verification** - All binaries checksummed
+- ✅ **Transparent Dependencies** - All clearly listed
+- ✅ **Standard Packaging** - Uses setuptools (industry standard)
+- ✅ **XDG Compliance** - Binaries cached in standard locations
 
 ---
 
@@ -850,51 +622,56 @@ Contributions are welcome! Please:
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
 ---
 
-## 📞 Support & Resources
+## 📞 Support
 
-- **PyPI Package**: [Install with pip](https://pypi.org/project/local-llama-inference/)
-- **GitHub Issues**: [Report bugs or request features](https://github.com/Local-Llama-Inference/Local-Llama-Inference/issues)
-- **GitHub Discussions**: [Ask questions and share ideas](https://github.com/Local-Llama-Inference/Local-Llama-Inference/discussions)
-- **Releases**: [Download packages](https://github.com/Local-Llama-Inference/Local-Llama-Inference/releases)
-- **Hugging Face Binaries**: [Download CUDA bundles](https://huggingface.co/datasets/waqasm86/Local-Llama-Inference/)
-
-### Related Projects
-- **llama.cpp** - Core inference engine: https://github.com/ggml-org/llama.cpp
-- **NCCL** - GPU collective communication: https://github.com/NVIDIA/nccl
-- **Hugging Face GGUF Models** - https://huggingface.co/models?search=gguf
+- **[GitHub Issues](https://github.com/Local-Llama-Inference/Local-Llama-Inference/issues)** - Report bugs
+- **[GitHub Discussions](https://github.com/Local-Llama-Inference/Local-Llama-Inference/discussions)** - Ask questions
+- **[Documentation](https://github.com/Local-Llama-Inference/Local-Llama-Inference)** - Read guides
 
 ---
 
-## 📊 Project Status
+## 📄 License
 
-- **Version**: 0.1.0 (Beta)
-- **Status**: Production Ready
-- **Last Updated**: February 24, 2026
-- **Python Support**: 3.8 - 3.12
-- **GPU Support**: NVIDIA sm_50 and newer
+MIT License - See [LICENSE](LICENSE) file for details
 
 ---
 
-## 🎓 Learning Resources
+## 📊 Version Information
 
-### Official Documentation
-- See `00-START-HERE.md` in release package
-- See `RELEASE_NOTES_v0.1.0.md` for detailed feature list
-- Check `examples/` directory for code samples
-
-### External Resources
-- **llama.cpp Documentation**: https://github.com/ggml-org/llama.cpp/tree/master/docs
-- **GGUF Format**: https://github.com/ggml-org/gguf
-- **NCCL Documentation**: https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/
+| Item | Details |
+|------|---------|
+| **Version** | 0.1.0 (Beta) |
+| **Release Date** | February 24, 2026 |
+| **Status** | Production Ready |
+| **Author** | waqasm86 |
+| **Python Support** | 3.8, 3.9, 3.10, 3.11, 3.12 |
+| **GPU Support** | NVIDIA sm_50 and newer |
+| **License** | MIT |
 
 ---
 
-**Built with ❤️ for the open-source ML community**
+## 🙏 Acknowledgments
+
+Built on top of:
+- **llama.cpp** - High-performance GGUF inference engine
+- **NVIDIA NCCL** - Multi-GPU communication library
+- **Hugging Face** - Model hub and binary hosting
+
+---
+
+**Ready to accelerate your LLM inference?**
+
+```bash
+# Get started now:
+pip install git+https://github.com/Local-Llama-Inference/Local-Llama-Inference.git@v0.1.0
+```
+
+Built with ❤️ for the open-source ML community
 
 ⭐ If you find this project useful, please consider starring the repository!
