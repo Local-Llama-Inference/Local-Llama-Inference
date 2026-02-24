@@ -3,8 +3,17 @@ __pycache__/
 *.py[codz]
 *$py.class
 
-# C extensions
+# C extensions and compiled binaries
 *.so
+*.so.*
+*.a
+*.o
+*.o.d
+*.elf
+*.dll
+*.dylib
+*.exe
+*.bin
 
 # Distribution / packaging
 .Python
@@ -205,6 +214,26 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Model files and large data
+*.gguf
+*.bin
+*.safetensors
+*.pb
+*.onnx
+*.pth
+*.pt
+*.pkl
+*.pickle
+
+# Build and compilation artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+compile_commands.json
+build/
 
 # Release artifacts and distributions
 # Binary distributions are managed via GitHub Releases, not in git
