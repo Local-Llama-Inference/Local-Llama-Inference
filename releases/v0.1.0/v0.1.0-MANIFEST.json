@@ -1,0 +1,97 @@
+{
+  "release": {
+    "name": "Local-Llama-Inference v0.1.0",
+    "date": "2026-02-24",
+    "status": "Beta",
+    "github": "https://github.com/Local-Llama-Inference/Local-Llama-Inference/"
+  },
+  "packages": {
+    "complete": {
+      "description": "Complete batteries-included package (CUDA + llama.cpp + NCCL + SDK)",
+      "files": [
+        {
+          "name": "local-llama-inference-complete-v0.1.0.tar.gz",
+          "size": "834 MB",
+          "format": "tar.gz",
+          "sha256": "b9b1a813e44f38c249e4d312ee88be94849a907da4f22fe9995c3d29d845c0b9"
+        },
+        {
+          "name": "local-llama-inference-complete-v0.1.0.zip",
+          "size": "1.4 GB",
+          "format": "zip",
+          "sha256": "2483eb8aef04fa6f515c8b2ba33ed8964a227e43cedeaa9b353bff895e1537d9"
+        }
+      ]
+    },
+    "sdk_only": {
+      "description": "SDK source code only (Python SDK)",
+      "files": [
+        {
+          "name": "local-llama-inference-sdk-v0.1.0.tar.gz",
+          "size": "45 KB",
+          "format": "tar.gz",
+          "sha256": "8ef64e094e9284ed2bd507b22d13772dd90b22c9fec185c45090d7c4a7e3fffd"
+        },
+        {
+          "name": "local-llama-inference-sdk-v0.1.0.zip",
+          "size": "28 KB",
+          "format": "zip",
+          "sha256": "5b29ea2811d958d1fda6de5cb9310ea7a84edf867dad58fa9494dc4b457a872b"
+        }
+      ]
+    }
+  },
+  "components": {
+    "llama_cpp": {
+      "version": "master",
+      "url": "https://github.com/ggml-org/llama.cpp",
+      "cuda_architectures": ["sm_50", "sm_61", "sm_70", "sm_75", "sm_80", "sm_86", "sm_89"],
+      "binaries_count": 45,
+      "total_size": "150 MB"
+    },
+    "nccl": {
+      "version": "2.29.3",
+      "url": "https://github.com/NVIDIA/nccl",
+      "total_size": "180 MB"
+    },
+    "cuda_runtime": {
+      "version": "12.8",
+      "url": "https://developer.nvidia.com/cuda-toolkit",
+      "total_size": "860 MB"
+    },
+    "python_sdk": {
+      "version": "0.1.0",
+      "python_versions": ["3.8", "3.9", "3.10", "3.11", "3.12"],
+      "total_size": "260 KB"
+    }
+  },
+  "system_requirements": {
+    "gpu": {
+      "minimum_compute_capability": 5.0,
+      "minimum_vram": "2 GB"
+    },
+    "system": {
+      "os": "Linux x86_64",
+      "python_version": "3.8+",
+      "system_ram": "8 GB minimum, 16 GB recommended"
+    },
+    "drivers": {
+      "nvidia_driver": "Any version",
+      "cuda_toolkit": "11.5+ (optional - runtime included)"
+    }
+  },
+  "verification": {
+    "method": "SHA256",
+    "instructions": "sha256sum -c CHECKSUMS.txt"
+  },
+  "features": [
+    "Single GPU inference",
+    "Multi-GPU tensor parallelism",
+    "OpenAI-compatible REST API",
+    "Streaming responses",
+    "NCCL collective operations",
+    "GPU auto-detection",
+    "VRAM monitoring",
+    "30+ llama.cpp endpoints"
+  ]
+}
